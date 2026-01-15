@@ -1,0 +1,631 @@
+@php
+$profile = null;
+if (!empty(Auth::user()->profile_img))
+{
+	$profile = asset ('uploads/profiles/'.Auth::user()->profile_img);
+}
+else{
+	$profile = asset ('assets/user_avator.png');
+}
+$layout = Auth::user()->theme;
+
+$seller_id = Auth::user()->id;
+$current_year = array();
+$current_year[] = "Current Year Sale";
+$last_year = array();
+$last_year[] = "Last Year Sale";
+$c_year = date('Y');
+for ($i=01;$i <=12;$i++)
+{
+	$data = \App\Models\Orders::where('user_id',$seller_id)
+	->where('order_status','Complete')
+	->whereYear('created_at', '=', $c_year)
+	->whereMonth('created_at', '=', $i)
+	->sum('total');
+	$current_year[] = $data;
+
+}
+for ($i=01;$i <=12;$i++)
+{
+	$data = \App\Models\Orders::where('user_id',$seller_id)
+	->where('order_status','Complete')
+	->whereYear('created_at', '=', $c_year-1)
+	->whereMonth('created_at', '=', $i)
+	->sum('total');
+	$last_year[] = $data;
+
+}
+$final = array();
+$final[] = $current_year;
+$final[] = $last_year;
+$chart = json_encode($final);
+
+$dir = Config::get('languages')[App::getLocale()]['dir'];
+@endphp
+
+<!DOCTYPE html>
+<html lang="{{App::getLocale()}}" dir="{{$dir}}">
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+<head>
+
+    <!-- Meta data -->
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=0'>
+    <meta content="Azea – Laravel Seller & Dashboard Template" name="descr;6iption">
+    <meta content="Spruko Private Limited" name="author">
+    <meta name="keywords"
+          content="laravel ui admin template, laravel admin template, laravel dashboard template,laravel ui template, laravel ui, livewire, laravel, laravel admin panel, laravel admin panel template, laravel blade, laravel bootstrap5, bootstrap admin template, admin, dashboard, admin template">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Title -->
+    <title>Seller | Dashboard</title>
+
+    <!--Favicon -->
+    <link rel="icon" href="{{asset ('assets/images/brand/favicon.ico ')}}" type="image/x-icon"/>
+
+    <!--Bootstrap css -->
+    <link href="{{asset ('assets/plugins/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
+
+    <!-- Style css -->
+    <link href="{{asset ('assets/css/style.css')}}" rel="stylesheet"/>
+    <link href="{{asset ('assets/css/style2.css')}}" rel="stylesheet" />
+    <link href="{{asset ('assets/css/dark.css')}}" rel="stylesheet"/>
+    <link href="{{asset ('assets/css/skin-modes.css')}}" rel="stylesheet"/>
+
+    <!-- Animate css -->
+    <link href="{{asset ('assets/css/animated.css')}}" rel="stylesheet"/>
+
+    <!--Sidemenu css -->
+    <link href="{{asset ('assets/css/sidemenu.css')}}" rel="stylesheet">
+    <!--mycustom css -->
+    <link href="{{asset ('assets/css/mycustom.css')}}" rel="stylesheet">
+    <!-- P-scroll bar css-->
+    <link href="{{asset ('assets/plugins/p-scrollbar/p-scrollbar.css')}}" rel="stylesheet"/>
+
+    <!---Icons css-->
+    <link href="{{asset ('assets/plugins/icons/icons.css')}}" rel="stylesheet"/>
+
+
+    <!-- INTERNAL C3 Charts css-->
+    <link href="{{asset('assets/plugins/charts-c3/c3-chart.css')}}" rel="stylesheet" />
+    <!-- Simplebar css -->
+    <link rel="stylesheet" href="{{asset ('assets/plugins/simplebar/css/simplebar.css')}}">
+
+    <!-- INTERNAL Morris Charts css -->
+    <link href="{{asset ('assets/plugins/morris/morris.css')}}" rel="stylesheet"/>
+
+    <!-- INTERNAL File Uploads css -->
+    <link href="{{asset('assets/plugins/fancyuploder/fancy_fileupload.css')}}" rel="stylesheet"/>
+
+    <!-- INTERNAL Select2 css -->
+    <link href="{{asset ('assets/plugins/select2/select2.min.css')}}" rel="stylesheet"/>
+
+    <!-- INTERNAL File Uploads css -->
+    <link href="{{asset('assets/plugins/fancyuploder/fancy_fileupload.css')}}" rel="stylesheet"/>
+    <!-- INTERNAL File Uploads css-->
+    <link href="{{asset('assets/plugins/fileupload/css/fileupload.css')}}" rel="stylesheet" type="text/css"/>
+    <!-- INTERNAL treeview -->
+    <link href="{{asset ('assets/plugins/treeview/treeview.css')}}" rel="stylesheet" type="text/css"/>
+    <!-- Data table css -->
+    <link href="{{asset ('assets/plugins/datatables/DataTables/css/dataTables.bootstrap5.css')}}" rel="stylesheet"/>
+    <link href="{{asset ('assets/plugins/datatables/Buttons/css/buttons.bootstrap5.min.css')}}" rel="stylesheet">
+    <link href="{{asset ('assets/plugins/datatables/Responsive/css/responsive.bootstrap5.min.css')}}" rel="stylesheet"/>
+
+    <!-- Color Skin css -->
+    <link id="theme" href="{{asset ('assets/colors/color1.css')}}" rel="stylesheet" type="text/css"/>
+
+    <!-- INTERNAL Switcher css -->
+    <link href="{{asset ('assets/switcher/css/switcher.css')}}" rel="stylesheet"/>
+    <link href="{{asset ('assets/switcher/demo.css')}}" rel="stylesheet"/>
+
+    <!-- INTERNAl WYSIWYG Editor css -->
+    <link href="{{asset('assets/plugins/wysiwyag/richtext.css')}}" rel="stylesheet"/>
+
+    <!-- INTERNAl Quill css -->
+    <link href="{{asset('assets/plugins/quill/quill.snow.css')}}" rel="stylesheet">
+    <link href="{{asset('assets/plugins/quill/quill.bubble.css')}}" rel="stylesheet">
+
+    {{--daterange--}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css">
+    <script type="text/javascript">
+        var my_chart =<?php print($chart); ?>;
+    </script>
+    <style>
+        .not-paid {
+            background-color: #FFCCCC; /* Set a background color to highlight the row */
+        }
+    </style>
+</head>
+
+	<body class="app sidebar-mini {{$dir}} {{$layout}}">
+	<audio id="alert_sound" controlsList="nodownload">
+		<source src="{{asset('assets/alert.wav')}}" type="audio/wav">
+	</audio>
+
+        <!---Global-loader-->
+        <div id="global-loader" >
+            <img src="{{asset ('assets/images/svgs/loader.svg')}}" alt="loader">
+        </div>
+        <!--- End Global-loader-->
+
+		<!-- PAGE -->
+		<div class="page">
+			<div class="page-main">
+
+            <!--aside open-->
+				<aside class="app-sidebar">
+					<div class="app-sidebar__logo">
+						<a class="header-brand" href="{{route('seller.dashboard')}}">
+							<img src="{{asset ('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="Azea logo">
+							<img src="{{asset ('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="Azea logo">
+							<img src="{{asset ('assets/images/brand/favicon.png')}}" class="header-brand-img mobile-logo" alt="Azea logo">
+							<img src="{{asset ('assets/images/brand/favicon1.png')}}" class="header-brand-img darkmobile-logo" alt="Azea logo">
+						</a>
+					</div>
+					<ul class="side-menu app-sidebar3">
+						<li class="side-item side-item-category">{{__('messages.main')}}</li>
+						<li class="slide">
+							<a class="side-menu__item"  href="{{route('seller.dashboard')}}">
+								<svg xmlns="http://www.w3.org/2000/svg"  class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24"><path d="M3 13h1v7c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-7h1a1 1 0 0 0 .707-1.707l-9-9a.999.999 0 0 0-1.414 0l-9 9A1 1 0 0 0 3 13zm7 7v-5h4v5h-4zm2-15.586 6 6V15l.001 5H16v-5c0-1.103-.897-2-2-2h-4c-1.103 0-2 .897-2 2v5H6v-9.586l6-6z"/></svg>
+							<span class="side-menu__label">{{__('messages.dashboard')}}</span></a>
+						</li>
+						<li class="side-item side-item-category">{{__('messages.components')}}</li>
+                        <li class="slide">
+                            <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
+                                <i class="fe fe-briefcase side-menu__icon"></i>
+                                <span class="side-menu__label">{{__('messages.plan-management')}}</span></a>
+                            <ul class="slide-menu">
+                                <li><a href="{{route('seller.current.plan')}}" class="slide-item">{{__('messages.current-plan')}}</a></li>
+                            </ul>
+                            <ul class="slide-menu">
+                                <li><a href="{{route('seller.plan.index')}}" class="slide-item">{{__('messages.select-plan')}}</a></li>
+                            </ul>
+                            <ul class="slide-menu">
+                                <li><a href="{{route('seller.plan.price.index')}}" class="slide-item">{{__('messages.plane-price')}}</a></li>
+                            </ul>
+                        </li>
+                        <li class="slide">
+							<a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
+								<i class="fe fe-briefcase side-menu__icon"></i>
+								<span class="side-menu__label">{{__('messages.setup-management')}}</span></a>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.category.list')}}" class="slide-item"> {{__('messages.manage-categories')}}</a></li>
+							</ul>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.tags.list')}}" class="slide-item"> {{__('messages.manage-tags')}}</a></li>
+							</ul>
+						</li>
+                        <li class="slide">
+							<a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
+								<i class="fe fe-briefcase side-menu__icon"></i>
+								<span class="side-menu__label">{{__('messages.city-management')}}</span></a>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.admin.city')}}" class="slide-item"> {{__('messages.admin-cities')}}</a></li>
+							</ul>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.city.mapping.view')}}" class="slide-item"> {{__('messages.city-mapping')}}</a></li>
+							</ul>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.our.city')}}" class="slide-item"> {{__('messages.our-cities')}}</a></li>
+							</ul>
+						</li>
+                        <li class="slide">
+							<a class="side-menu__item" data-bs-toggle="slide" href="{{route('seller.company.catalog')}}">
+								<i class="fe fe-briefcase side-menu__icon"></i>
+								<span class="side-menu__label">{{__('messages.company-catalog')}}</span></a>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item" href="{{route('seller.drop.catalog')}}">
+								<i class="fe fe-briefcase side-menu__icon"></i>
+								<span class="side-menu__label">{{__('messages.my-catalog')}}</span>
+							</a>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
+								<i class="fe fe-briefcase side-menu__icon"></i>
+								<span class="side-menu__label">{{__('messages.order-management')}}</span></a>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.woo.order.list')}}" class="slide-item"> {{__('messages.new-orders')}}</a></li>
+								<li><a href="{{route('seller.woo.order.management')}}" class="slide-item"> {{__('messages.manage-orders')}}</a></li>
+								<li><a href="{{route('seller.woo.refunded.order')}}" class="slide-item"> {{__('messages.refunded-orders')}}</a></li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
+                                <i class="fe fe-briefcase side-menu__icon"></i>
+							<span class="side-menu__label">{{__('messages.wallet-management')}}</span></a>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.wallet')}}" class="slide-item"> {{__('messages.my-wallet')}}</a></li>
+							</ul>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.transhistory')}}" class="slide-item"> {{__('messages.transaction-history')}}</a></li>
+							</ul>
+						</li>
+						<li class="slide">
+							<a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
+								<i class="fe fe-briefcase side-menu__icon"></i>
+								<span class="side-menu__label">{{__('messages.settings')}}</span></a>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.api.view')}}" class="slide-item">{{__('messages.API-integration')}}</a></li>
+							</ul>
+                            <ul class="slide-menu">
+								<li><a href="{{route('seller.smsa.credentials')}}" class="slide-item">{{__('messages.SMSA-Credentials')}}</a></li>
+							</ul>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.language.setup')}}" class="slide-item">{{__('messages.language-setup')}}</a></li>
+							</ul>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.bank')}}" class="slide-item">{{__('messages.bank-details')}}</a></li>
+							</ul>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.paypal')}}" class="slide-item">{{__('messages.paypal-details')}}</a></li>
+							</ul>
+							<ul class="slide-menu">
+								<li><a href="{{route('seller.profile')}}" class="slide-item">{{__('messages.my-profile')}}</a></li>
+							</ul>
+						</li>
+					</ul>
+				</aside>
+				<!--aside closed-->
+            <!--app header-->
+						<div class="app-header header main-header1">
+							<div class="container-fluid">
+								<div class="d-flex">
+									<a class="header-brand" href="index.html">
+										<img src="{{asset ('assets/images/brand/logo.png')}}" class="header-brand-img desktop-lgo" alt="Azea logo">
+										<img src="{{asset ('assets/images/brand/logo1.png')}}" class="header-brand-img dark-logo" alt="Azea logo">
+										<img src="{{asset ('assets/images/brand/favicon.png')}}" class="header-brand-img mobile-logo" alt="Azea logo">
+										<img src="{{asset ('assets/images/brand/favicon1.png')}}" class="header-brand-img darkmobile-logo" alt="Azea logo">
+									</a>
+									<div class="app-sidebar__toggle d-flex" data-bs-toggle="sidebar">
+										<a class="open-toggle" href="javascript:void(0);">
+											<svg xmlns="http://www.w3.org/2000/svg" class="feather feather-align-left header-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+										</a>
+									</div>
+
+									<div class="d-flex order-lg-2 ms-auto main-header-end">
+										<button  class="navbar-toggler navresponsive-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent-4" aria-controls="navbarSupportedContent-4" aria-expanded="true" aria-label="Toggle navigation">
+											<i class="fe fe-more-vertical header-icons navbar-toggler-icon"></i>
+										</button>
+										<div class="navbar navbar-expand-lg navbar-collapse responsive-navbar p-0">
+											<div class="collapse navbar-collapse" id="navbarSupportedContent-4">
+												<div class="d-flex order-lg-2">
+													<div class="dropdown d-flex">
+														<a class="nav-link icon theme-layout nav-link-bg my-layout">
+															<span class="light-layout"><svg xmlns="http://www.w3.org/2000/svg" class="header-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M20.742 13.045a8.088 8.088 0 0 1-2.077.271c-2.135 0-4.14-.83-5.646-2.336a8.025 8.025 0 0 1-2.064-7.723A1 1 0 0 0 9.73 2.034a10.014 10.014 0 0 0-4.489 2.582c-3.898 3.898-3.898 10.243 0 14.143a9.937 9.937 0 0 0 7.072 2.93 9.93 9.93 0 0 0 7.07-2.929 10.007 10.007 0 0 0 2.583-4.491 1.001 1.001 0 0 0-1.224-1.224zm-2.772 4.301a7.947 7.947 0 0 1-5.656 2.343 7.953 7.953 0 0 1-5.658-2.344c-3.118-3.119-3.118-8.195 0-11.314a7.923 7.923 0 0 1 2.06-1.483 10.027 10.027 0 0 0 2.89 7.848 9.972 9.972 0 0 0 7.848 2.891 8.036 8.036 0 0 1-1.484 2.059z"/></svg></span>
+															<span class="dark-layout"><svg xmlns="http://www.w3.org/2000/svg" class="header-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M6.993 12c0 2.761 2.246 5.007 5.007 5.007s5.007-2.246 5.007-5.007S14.761 6.993 12 6.993 6.993 9.239 6.993 12zM12 8.993c1.658 0 3.007 1.349 3.007 3.007S13.658 15.007 12 15.007 8.993 13.658 8.993 12 10.342 8.993 12 8.993zM10.998 19h2v3h-2zm0-17h2v3h-2zm-9 9h3v2h-3zm17 0h3v2h-3zM4.219 18.363l2.12-2.122 1.415 1.414-2.12 2.122zM16.24 6.344l2.122-2.122 1.414 1.414-2.122 2.122zM6.342 7.759 4.22 5.637l1.415-1.414 2.12 2.122zm13.434 10.605-1.414 1.414-2.122-2.122 1.414-1.414z"/></svg></span>
+														</a>
+													</div><!-- Theme-Layout -->
+													<div class="dropdown  header-fullscreen d-flex" >
+														<a  class="nav-link icon full-screen-link p-0"  id="fullscreen-button">
+															<svg xmlns="http://www.w3.org/2000/svg" class="header-icon" width="24" height="24" viewBox="0 0 24 24"><path d="M5 5h5V3H3v7h2zm5 14H5v-5H3v7h7zm11-5h-2v5h-5v2h7zm-2-4h2V3h-7v2h5z"/></svg>
+														</a>
+													</div>
+													<div class="dropdown country-selector  d-flex">
+                                                        <li class="nav-item dropdown">
+                                                            <a class="nav-link dropdown-toggle" href="javascript:void(0);" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                <img src="{{asset ('assets/images/flags/'.Config::get('languages')[App::getLocale()]['flag-icon'].'.svg')}}" alt="flag" class="me-2 country"> {{ Config::get('languages')[App::getLocale()]['display'] }}
+                                                            </a>
+                                                            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                                                @foreach (Config::get('languages') as $lang => $language)
+                                                                    @if ($lang != App::getLocale())
+                                                                        <a class="dropdown-item" href="{{ route('lang.switch', $lang) }}"><img src="{{asset ('assets/images/flags/'.$language['flag-icon'].'.svg')}}" alt="flag" class="me-2 country"> {{$language['display']}}</a>
+                                                                    @endif
+                                                                @endforeach
+                                                            </div>
+                                                        </li>
+													</div>
+
+													<div class="dropdown header-notify d-flex">
+														<a class="nav-link icon" data-bs-toggle="dropdown">
+															<svg xmlns="http://www.w3.org/2000/svg" class="header-icon" width="24"
+																 height="24" viewBox="0 0 24 24">
+																<path d="M19 13.586V10c0-3.217-2.185-5.927-5.145-6.742C13.562 2.52 12.846 2 12 2s-1.562.52-1.855 1.258C7.185 4.074 5 6.783 5 10v3.586l-1.707 1.707A.996.996 0 0 0 3 16v2a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-2a.996.996 0 0 0-.293-.707L19 13.586zM19 17H5v-.586l1.707-1.707A.996.996 0 0 0 7 14v-4c0-2.757 2.243-5 5-5s5 2.243 5 5v4c0 .266.105.52.293.707L19 16.414V17zm-7 5a2.98 2.98 0 0 0 2.818-2H9.182A2.98 2.98 0 0 0 12 22z"/>
+															</svg>
+															<span id="pulse"></span>
+														</a>
+														<div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow  animated">
+															<div class="dropdown-header">
+																<h6 class="mb-0">{{__('messages.notifications')}}</h6>
+															</div>
+															<div id="notification_body" l6class="notify-menu">
+
+															</div>
+															<div class=" text-center p-2">
+																<a href="{{route('seller.notifications')}}"
+																   class="btn btn-primary btn-md fs-13 btn-block">{{__('messages.view-all')}}</a>
+															</div>
+														</div>
+													</div>
+
+													<div class="dropdown profile-dropdown d-flex">
+														<a href="javascript:void(0);" class="nav-link pe-0 leading-none" data-bs-toggle="dropdown">
+															<span class="header-avatar1">
+																<img src="{{$profile}}" alt="img" class="avatar avatar-md brround">
+															</span>
+														</a>
+														<div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow animated">
+															<div class="text-center">
+																<div class="text-center user pb-0 font-weight-bold">{{Auth::user()->name}}</div>
+																<span class="text-center user-semi-title">{{Auth::user()->role}}</span>
+																<div class="dropdown-divider"></div>
+															</div>
+															<a class="dropdown-item d-flex" href="{{route('seller.profile')}}">
+																<svg class="header-icon me-2" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM7.07 18.28c.43-.9 3.05-1.78 4.93-1.78s4.51.88 4.93 1.78C15.57 19.36 13.86 20 12 20s-3.57-.64-4.93-1.72zm11.29-1.45c-1.43-1.74-4.9-2.33-6.36-2.33s-4.93.59-6.36 2.33C4.62 15.49 4 13.82 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8c0 1.82-.62 3.49-1.64 4.83zM12 6c-1.94 0-3.5 1.56-3.5 3.5S10.06 13 12 13s3.5-1.56 3.5-3.5S13.94 6 12 6zm0 5c-.83 0-1.5-.67-1.5-1.5S11.17 8 12 8s1.5.67 1.5 1.5S12.83 11 12 11z"/></svg>
+																<div class="fs-13">{{__('messages.profile')}}</div>
+															</a>
+															<a class="dropdown-item d-flex" href="{{route('logout')}}"  onclick="event.preventDefault();
+															document.getElementById('logout-form').submit();">
+																<svg class="header-icon me-2" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"/></g><g><path d="M11,7L9.6,8.4l2.6,2.6H2v2h10.2l-2.6,2.6L11,17l5-5L11,7z M20,19h-8v2h8c1.1,0,2-0.9,2-2V5c0-1.1-0.9-2-2-2h-8v2h8V19z"/></g></svg>
+																<div class="fs-13">{{__('messages.sign-out')}}</div>
+															</a>
+															<form id="logout-form" method="POST" action="{{ route('logout') }}" style="display: none;">
+																@csrf
+															</form>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!--/app header-->
+
+
+                        @yield('content')
+            </div>
+
+            <!--Footer-->
+			<footer class="footer">
+				<div class="container">
+					<div class="row align-items-center flex-row-reverse">
+						<div class="col-md-12 col-sm-12 text-center">
+                            {{__('messages.left-footer')}} <a href="#"></a> {{__('messages.right-footer')}}
+						</div>
+					</div>
+				</div>
+			</footer>
+			<!-- End Footer-->
+
+		</div>
+        <!-- Back to top -->
+		<a href="#top" id="back-to-top"><i class="fe fe-chevron-up"></i></a>
+
+		<!-- Jquery js-->
+		<script src="{{asset ('assets/plugins/jquery/jquery.min.js ')}}"></script>
+
+
+		<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+		<!-- Google Map API-->
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBcSQuxsnNU70uYQG1_cstT16IjKQedfdk&libraries=places&v=weekly"></script>
+        {{--ajax--}}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajaxy/1.6.1/scripts/jquery.ajaxy.min.js"></script>
+        <!-- Bootstrap5 js-->
+        <script src="{{asset ('assets/plugins/bootstrap/popper.min.js ')}}"></script>
+        <script src="{{asset ('assets/plugins/bootstrap/js/bootstrap.min.js ')}}"></script>
+
+		<!--Othercharts js-->
+		<script src="{{asset ('assets/plugins/othercharts/jquery.sparkline.min.js ')}}"></script>
+
+		<!-- Jquery-rating js-->
+		<script src="{{asset ('assets/plugins/rating/jquery.rating-stars.js ')}}"></script>
+
+		<!--Sidemenu js-->
+		<script src="{{asset ('assets/plugins/sidemenu/sidemenu.js ')}}"></script>
+
+		<!-- P-scroll js-->
+		<script src="{{asset ('assets/plugins/p-scrollbar/p-scrollbar.js ')}}"></script>
+		<script src="{{asset ('assets/plugins/p-scrollbar/p-scroll1.js ')}}"></script>
+		<script src="{{asset ('assets/plugins/p-scrollbar/p-scroll.js ')}}"></script>
+
+
+		<!--INTERNAL Flot Charts js-->
+		<script src="{{asset ('assets/plugins/flot/jquery.flot.js ')}}"></script>
+		<script src="{{asset ('assets/plugins/flot/jquery.flot.fillbetween.js ')}}"></script>
+		<script src="{{asset ('assets/plugins/flot/jquery.flot.pie.js ')}}"></script>
+		<script src="{{asset ('assets/js/dashboard.sampledata.js ')}}"></script>
+		<script src="{{asset ('assets/js/chart.flot.sampledata.js ')}}"></script>
+
+		<!-- INTERNAL Chart js -->
+		<script src="{{asset ('assets/plugins/chart/chart.bundle.js ')}}"></script>
+		<script src="{{asset ('assets/plugins/chart/utils.js ')}}"></script>
+
+		<!-- INTERNAL Apexchart js -->
+		<script src="{{asset ('assets/js/apexcharts.js ')}}"></script>
+
+		<!--INTERNAL Moment js-->
+		<script src="{{asset ('assets/plugins/moment/moment.js ')}}"></script>
+
+		<!--INTERNAL Index js-->
+		<script src="{{asset ('assets/js/index1.js ')}}"></script>
+
+        {{--daterange--}}
+
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+
+        <!-- INTERNAL Data tables -->
+        <script src="{{asset('assets/plugins/datatables/DataTables/js/jquery.dataTables.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/DataTables/js/dataTables.bootstrap5.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/Buttons/js/dataTables.buttons.min.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/Buttons/js/buttons.bootstrap4.min.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/JSZip/jszip.min.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/pdfmake/pdfmake.min.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/pdfmake/vfs_fonts.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/Buttons/js/buttons.html5.min.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/Buttons/js/buttons.print.min.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/Buttons/js/buttons.colVis.min.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/Responsive/js/dataTables.responsive.min.js')}}"></script>
+        <script src="{{asset('assets/plugins/datatables/Responsive/js/responsive.bootstrap5.min.js')}}"></script>
+        <script src="{{asset('assets/js/datatables.js')}}"></script>
+
+
+		<!-- INTERNAL Select2 js -->
+		<script src="{{asset ('assets/plugins/select2/select2.full.min.js ')}}"></script>
+		<script src="{{asset ('assets/js/select2.js ')}}"></script>
+
+		<!-- Simplebar JS -->
+		<script src="{{asset ('assets/plugins/simplebar/js/simplebar.min.js ')}}"></script>
+
+		<!-- Rounded bar chart js-->
+		<script src="{{asset ('assets/js/rounded-barchart.js ')}}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+
+    <!-- INTERNAL c3.js Charts js-->
+	<script src="{{asset('assets/plugins/charts-c3/d3.v5.min.js')}}"></script>
+	<script src="{{asset('assets/plugins/charts-c3/c3-chart.js')}}"></script>
+	<script src="{{asset('assets/js/charts.js')}}"></script>
+
+		<!-- Custom js-->
+		<script src="{{asset ('assets/js/print.js ')}}"></script>
+		<script src="{{asset ('assets/js/custom.js ')}}"></script>
+
+		<!-- Sweet Alert -->
+		<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+		<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+
+		<!-- Switcher js -->
+		<script src="{{asset ('assets/switcher/js/switcher.js ')}}"></script>
+
+		<!-- INTERNAL File-Uploads Js-->
+		<script src="{{asset('assets/plugins/fancyuploder/jquery.ui.widget.js')}}"></script>
+		<script src="{{asset('assets/plugins/fancyuploder/jquery.fileupload.js')}}"></script>
+		<script src="{{asset('assets/plugins/fancyuploder/jquery.iframe-transport.js')}}"></script>
+		<script src="{{asset('assets/plugins/fancyuploder/jquery.fancy-fileupload.js')}}"></script>
+		<script src="{{asset('assets/plugins/fancyuploder/fancy-uploader.js')}}"></script>
+		<!-- INTERNAL Treeview js -->
+		<script src="{{asset('assets/plugins/treeview/treeview.js')}}"></script>
+		<!-- INTERNAL File uploads js -->
+		<script src="{{asset('assets/plugins/fileupload/js/dropify.js')}}"></script>
+		<script src="{{asset('assets/js/filupload.js')}}"></script>
+
+		<!--INTERNAL Form Advanced Element -->
+		<script src="{{asset('assets/js/formelementadvnced.js')}}"></script>
+		<script src="{{asset('assets/js/form-elements.js')}}"></script>
+		<script src="{{asset('assets/js/file-upload.js')}}"></script>
+
+		<!-- INTERNAL WYSIWYG Editor js -->
+		<script src="{{asset('assets/plugins/wysiwyag/jquery.richtext.js')}}"></script>
+		<script src="{{asset('assets/js/form-editor.js')}}"></script>
+		<!-- INTERNAL quill js -->
+		<script src="{{asset('assets/plugins/quill/quill.min.js')}}"></script>
+		<script src="{{asset('assets/js/form-editor2.js')}}"></script>
+		<script src="{{asset('mycustom.js')}}"></script>
+        <!-- INTERNAL File uploads js -->
+        <script src="{{asset('assets/plugins/fileupload/js/dropify.js')}}"></script>
+        <script src="{{asset('assets/js/filupload.js')}}"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+		<script type="text/javascript">
+			function sound(count) {
+				if (count == "true") {
+					toastr.info("New Notification Received.");
+					document.getElementById('alert_sound').play();
+				}
+			}
+
+			function noti() {
+				$.ajaxSetup({
+					headers: {
+						'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+					}
+				});
+				$.ajax({
+					url: "{{route('seller.get.noti')}}",
+					type: "GET",
+					dataType: "json",
+					success: function (data) {
+						if (data.new == "true") {
+							$('#pulse').addClass('pulse');
+						}
+						if (data.new == "false") {
+							$('#pulse').removeClass('pulse');
+						}
+						$('#notification_body').html(data.body);
+						sound(data.arrival);
+					}
+				})
+			}
+
+			noti();
+			setInterval(noti, 3000);
+
+			function see(id) {
+				console.log(id);
+				var data = {
+					'id': id,
+				};
+				$.ajaxSetup({
+					headers: {
+						'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+					}
+				});
+				$.ajax({
+					url: "{{route('seller.get.noti.see')}}",
+					type: "POST",
+					dataType: "json",
+					data: data,
+				})
+			}
+
+			$(".my-layout").click(function () {
+				if($('body').hasClass('light-mode')) {
+					$.ajaxSetup({
+						headers: {
+							'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+						}
+					});
+					var data = {
+						'layout': "dark-mode",
+					};
+					$.ajax({
+						url:"{{route('seller.theme')}}",
+						type:"POST",
+						dataType:"json",
+						data: data,
+						success:function(data){
+							if (data.status == 200)
+							{
+								$('body').removeClass('light-mode');
+								$('body').addClass('dark-mode');
+							}
+						}
+					})
+				}
+				if($('body').hasClass('dark-mode')) {
+					$.ajaxSetup({
+						headers: {
+							'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+						}
+					});
+					var data = {
+						'layout': "light-mode",
+					};
+					$.ajax({
+						url:"{{route('seller.theme')}}",
+						type:"POST",
+						dataType:"json",
+						data: data,
+						success:function(data){
+							if (data.status == 200)
+							{
+								$('body').removeClass('dark-mode');
+								$('body').addClass('light-mode');
+							}
+						}
+					})
+				}
+			});
+		</script>
+		@yield('query')
+	</body>
+
+</html>

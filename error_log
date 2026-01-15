@@ -1,0 +1,1 @@
+[10-Feb-2022 13:02:28 UTC] PHP Fatal error:  Cannot declare class CreateUsersTable, because the name is already in use in /home/buydnnds/jalal.ordertik.com/database/migrations/2022_02_10_125944_create_users_table.php on line 7

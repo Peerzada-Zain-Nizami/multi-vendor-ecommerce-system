@@ -200,12 +200,14 @@ Add Shopify API credentials in Settings → Shopify Integration
 - **Admin Panel:** `/admin`
 - **Seller Dashboard:** `/seller`
 - **Supplier Dashboard:** `/supplier`
+- **Warehouse Admin:** `/warehouse`
 
 ### User Roles
 
 1. **Admin** - Full system access and configuration
 2. **Seller/Vendor** - Product and order management
 3. **Supplier** - Inventory and stock management
+4. **Warehouse Admin** - Warehouse operations, stock management, and inventory control
 
 ## 🚀 Deployment
 

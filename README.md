@@ -12,6 +12,7 @@ This platform is a full-featured multi-vendor e-commerce system that enables bus
   - Admin Dashboard with full control
   - Seller/Vendor Portal for product management
   - Supplier Management System
+  - Warehouse Dashboard
   
 - **Dropshipping & Order Management**
   - Complete dropshipping workflow
